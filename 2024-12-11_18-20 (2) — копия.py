@@ -192,51 +192,7 @@ def handle_admin_export(call):
         reply_markup=create_admin_multifilter_keyboard()
     )
 
-@bot.callback_query_handler(func=lambda call: call.data == 'back_to_admin_main')
-def back_to_admin_main(call):
-    user_id = call.from_user.id
-    
-    # Возвращаемся к главному меню администратора
-    bot.edit_message_text(
-        chat_id=user_id, 
-        message_id=call.message.message_id, 
-        text="Вы успешно вошли как Администратор. Какие данные хотите увидеть?", 
-        reply_markup=create_admin_main_keyboard()
-    )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def export_student_data(user_id, role='admin',**filters):
+def export_student_data(user_id, role='admin', extra=None, filter_citizenship='РК', **filters):
     try:
         base_query = """
             SELECT s.lname, s.fname, s.mname, g.group_name, s.citizenship, s.reason_for_stay, 
@@ -341,8 +297,6 @@ def export_student_data(user_id, role='admin',**filters):
         print(f"Error exporting data: {e}")
         bot.send_message(user_id, f"Произошла ошибка при экспорте данных: {str(e)}")
 
-
-
 @bot.callback_query_handler(func=lambda call: call.data.startswith('select_filter_'))
 def handle_filter_selection(call):
     user_id = call.from_user.id
@@ -434,59 +388,44 @@ def apply_selected_filters(call):
     # Очистка фильтров после применения
     del user_filters[user_id]
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @bot.callback_query_handler(func=lambda call: call.data == 'reset_filters')
 def reset_filters(call):
     user_id = call.from_user.id
     
-    # В обработчике callback-запроса
-    if call.data == "select_filter_all_groups":
-        export_student_data(user_id, 'admin', None, filter_all_groups='all')
-
-    elif call.data == "export_specific_group":
-        bot.edit_message_text(
-            "Выберите группу:", 
-            chat_id=user_id, 
-            message_id=call.message.message_id, 
-            reply_markup=create_group_keyboard()
-        )
-
-    elif call.data.startswith("group_"):
-        group_name = call.data.split("_", 1)[1]
-        export_student_data(user_id, 'admin', None, filter_group=group_name)
-
-    elif call.data == "export_year_1":
-        export_student_data(user_id, 'admin', None, filter_year=1)
-    elif call.data == "export_year_2":
-        export_student_data(user_id, 'admin', None, filter_year=2)
-    elif call.data == "export_year_3":
-        export_student_data(user_id, 'admin', None, filter_year=3)
-
-    elif call.data == "citizenship_rk_admin":
-        export_student_data(user_id, 'admin', None, filter_citizenship='РК')
-    elif call.data == "citizenship_international_admin":
-        export_student_data(user_id, 'admin', None, filter_citizenship='Иное')
-
-    elif call.data == "family_full_admin":
-        export_student_data(user_id, 'admin', None, filter_family_status='Полная')
-    elif call.data == "family_single_mother_admin":
-        export_student_data(user_id, 'admin', None, filter_family_status='Только мать')
-    elif call.data == "family_single_father_admin":
-        export_student_data(user_id, 'admin', None, filter_family_status='Только отец')
-    elif call.data == "family_guardian_admin":
-        export_student_data(user_id, 'admin', None, filter_family_status='Опекун')
-
-    elif call.data == "export_gender_male":
-        export_student_data(user_id, 'admin', None, filter_gender='male')
-    elif call.data == "export_gender_female":
-        export_student_data(user_id, 'admin', None, filter_gender='female')
-
-    elif call.data == "age_under_18":
-        export_student_data(user_id, 'admin', None, filter_age_range='18>')
-    elif call.data == "age_over_18":
-        export_student_data(user_id, 'admin', None, filter_age_range='18<')
-
-
-
     # Удаляем фильтры для пользователя
     if user_id in user_filters:
         del user_filters[user_id]
@@ -539,100 +478,20 @@ def create_admin_multifilter_keyboard(user_id):
         types.InlineKeyboardButton("18>", callback_data="age_under_15"),
         types.InlineKeyboardButton("18<", callback_data="age_over_18")
     )
-
-    keyboard.row(
-        types.InlineKeyboardButton("✅ Применить фильтры", callback_data="apply_filters"),
-        types.InlineKeyboardButton("❌ Сбросить фильтры", callback_data="reset_filters")
-    )
+    
     return keyboard
 
 #Admin_panel
 def create_admin_main_keyboard():
     keyboard = types.InlineKeyboardMarkup()
-    
     keyboard.row(
-        types.InlineKeyboardButton("Управление колледжом", callback_data="admin_crud_button"),
+        types.InlineKeyboardButton("Управление колледжом", callback_data="admin_crud_button")
+    )
+
+    keyboard.row(
         types.InlineKeyboardButton("Выбрать фильтры", callback_data="admin_select_filters")
     )
-    
     return keyboard
-
-
-@bot.callback_query_handler(func=lambda call: call.data == 'admin_crud_button')
-def handle_admin_crud(call):
-    bot.send_message(call.from_user.id, "Вы выбрали управление колледжем.")
-    # Реализуйте логику работы для "Управление колледжом"
-
-@bot.callback_query_handler(func=lambda call: call.data == 'admin_select_filters')
-def handle_admin_filters(call):
-    bot.send_message(call.from_user.id, "Доступные фильтры:", reply_markup=create_admin_multifilter_keyboard(call.from_user.id))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 def create_group_keyboard():
     keyboard = types.InlineKeyboardMarkup()
@@ -1050,6 +909,52 @@ def handle_callback(call):
         current_step[user_id] = 'parent_name'
         bot.edit_message_text("Введите ФИО опекуна:", chat_id=user_id, message_id=call.message.message_id)
 
+# В обработчике callback-запроса
+    elif call.data == "select_filter_all_groups":
+        export_student_data(user_id, 'admin', None, filter_all_groups='all')
+
+    elif call.data == "export_specific_group":
+        bot.edit_message_text(
+            "Выберите группу:", 
+            chat_id=user_id, 
+            message_id=call.message.message_id, 
+            reply_markup=create_group_keyboard()
+        )
+
+    elif call.data.startswith("group_"):
+        group_name = call.data.split("_", 1)[1]
+        export_student_data(user_id, 'admin', None, filter_group=group_name)
+
+    elif call.data == "export_year_1":
+        export_student_data(user_id, 'admin', None, filter_year=1)
+    elif call.data == "export_year_2":
+        export_student_data(user_id, 'admin', None, filter_year=2)
+    elif call.data == "export_year_3":
+        export_student_data(user_id, 'admin', None, filter_year=3)
+
+    elif call.data == "citizenship_rk_admin":
+        export_student_data(user_id, 'admin', None, filter_citizenship='РК')
+    elif call.data == "citizenship_international_admin":
+        export_student_data(user_id, 'admin', None, filter_citizenship='Иное')
+
+    elif call.data == "family_full_admin":
+        export_student_data(user_id, 'admin', None, filter_family_status='Полная')
+    elif call.data == "family_single_mother_admin":
+        export_student_data(user_id, 'admin', None, filter_family_status='Только мать')
+    elif call.data == "family_single_father_admin":
+        export_student_data(user_id, 'admin', None, filter_family_status='Только отец')
+    elif call.data == "family_guardian_admin":
+        export_student_data(user_id, 'admin', None, filter_family_status='Опекун')
+
+    elif call.data == "export_gender_male":
+        export_student_data(user_id, 'admin', None, filter_gender='male')
+    elif call.data == "export_gender_female":
+        export_student_data(user_id, 'admin', None, filter_gender='female')
+
+    elif call.data == "age_under_18":
+        export_student_data(user_id, 'admin', None, filter_age_range='18>')
+    elif call.data == "age_over_18":
+        export_student_data(user_id, 'admin', None, filter_age_range='18<')
 
 def get_notifications():
     try:
